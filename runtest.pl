@@ -14,7 +14,7 @@
 # name of the global configuration file for the testsuite:
 $config_file    = "ompts.conf";
 $logfile        = "ompts.log"; # overwriteable by value in config file
-$env_set_threads_command = 'OMP_NUM_THREADS=%n; export OMP_NUM_THREADS;';
+$env_set_threads_command = 'set OMP_NUM_THREADS=%n &';
 $debug_mode     = 0;
 ################################################################################
 # After this line the script part begins! Do not edit anithing below
@@ -111,7 +111,7 @@ if (-e $ARGV[0])   { write_result_file_head();
 # Function which prints the results file
 sub print_results
 {
-    system("echo; cat $opt_resultsfile; echo;");
+    system("type $opt_resultsfile");
 }
 
 # Function which prints a summary of all test
@@ -204,11 +204,11 @@ sub run_test
 
 # path to test and crosstest either in normal or in orphaned version
     if ($orphan) {
-        $bin_name  = "bin/$opt_lang/orph_test_$testname";
-        $cbin_name = "bin/$opt_lang/orph_ctest_$testname";
+        $bin_name  = "bin\\$opt_lang\\orph_test_$testname.exe";
+        $cbin_name = "bin\\$opt_lang\\orph_ctest_$testname.exe";
     } else {
-        $bin_name  = "bin/$opt_lang/test_$testname";
-        $cbin_name = "bin/$opt_lang/ctest_$testname";
+        $bin_name  = "bin\\$opt_lang\\test_$testname.exe";
+        $cbin_name = "bin\\$opt_lang\\ctest_$testname.exe";
     }
 # Check if executables exist
     if (! -e $bin_name) {
@@ -216,7 +216,7 @@ sub run_test
         return ('test' => '-', 'crosstest' => '-');
     }
 # run the test
-    $cmd = "$env_set_threads_command ./$bin_name >$bin_name.out";
+    $cmd = "$env_set_threads_command .\\$bin_name >$bin_name.out";
     print "Running test with $numthreads threads .";
     $exit_status = timed_sys_command ($cmd);
 ############################################################
@@ -247,7 +247,7 @@ sub run_test
     }
 # run crosstest
 # Test was successful, so it makes sense to run the crosstest
-    $cmd = "$env_set_threads_command ./$cbin_name > $cbin_name.out";
+    $cmd = "$env_set_threads_command .\\$cbin_name > $cbin_name.out";
     $exit_status = timed_sys_command ($cmd);
 ############################################################
 # Check if crosstest finished within max execution time
@@ -272,18 +272,19 @@ sub compile_src
 {
     my ($testname, $orphan) = @_;
     print "Compiling soures ............";
+    $msvc_compile_command = "cl.exe -openmp:experimental -openmp:llvm -O2 -DWIN32 -D_WINDOWS -D_WIN32 -TP -Fobin\\$opt_lang\\ -Febin\\$opt_lang\\";
     if ($orphan) {
 # Make orphaned tests
         $exec_name     = "bin/$opt_lang/orph_test_$testname";
         $crossexe_name = "bin/$opt_lang/orph_ctest_$testname";
-        $resulttest  = system ("make $exec_name > $exec_name\_compile.log" );
-        $resultctest = system ("make $crossexe_name > $crossexe_name\_compile.log" );
+        $resulttest  = system ("$msvc_compile_command $exec_name.c > $exec_name\_compile.log");
+        $resultctest = system ("$msvc_compile_command $crossexe_name.c > $crossexe_name\_compile.log");
     } else {
 # Make test
         $exec_name     = "bin/$opt_lang/test_$testname";
         $crossexe_name = "bin/$opt_lang/ctest_$testname";
-        $resulttest  = system ("make $exec_name > $exec_name\_compile.log" );
-        $resultctest = system ("make $crossexe_name > $crossexe_name\_compile.log" );
+        $resulttest  = system ("$msvc_compile_command $exec_name.c > $exec_name\_compile.log" );
+        $resultctest = system ("$msvc_compile_command $crossexe_name.c > $crossexe_name\_compile.log" );
     }
     if ($resulttest) { test_error ("Compilation of the test failed."); }
     if ($resultctest){ test_error ("Compilation of the crosstest failed."); }
@@ -303,9 +304,9 @@ sub init_directory_structure
     my ($language) = @_;
     if (-e "bin" && -d "bin") { warning ("Old binary directory detected!");}
     else { system ("mkdir bin"); }
-    if (-e "bin/$language" && -d "bin/$language") {
+    if (-e "bin\\$language" && -d "bin\\$language") {
         warning ("Old binary directory for language $language found.");}
-    else { system ("mkdir bin/$language"); }
+    else { system ("mkdir bin\\$language"); }
 }
 
 # Function that generates the sourcecode for the given test
@@ -322,15 +323,15 @@ sub make_src
     if ($orphan) {
 # Make orphaned tests
         $src_name = "bin/$opt_lang/orph_test_$testname.$extension";
-        $resulttest = system ("./$templateparsername --test --orphan $template_file $src_name");
+        $resulttest = system ("perl .\\$templateparsername --test --orphan $template_file $src_name");
         $src_name = "bin/$opt_lang/orph_ctest_$testname.$extension";
-        $resultctest = system ("./$templateparsername --crosstest --orphan $template_file $src_name");
+        $resultctest = system ("perl .\\$templateparsername --crosstest --orphan $template_file $src_name");
     } else {
 # Make test
         $src_name = "bin/$opt_lang/test_$testname.$extension";
-        $resulttest = system ("./$templateparsername --test --noorphan $template_file $src_name");
+        $resulttest = system ("perl .\\$templateparsername --test --noorphan $template_file $src_name");
         $src_name = "bin/$opt_lang/ctest_$testname.$extension";
-        $resultctest = system ("./$templateparsername --crosstest --noorphan $template_file $src_name");
+        $resultctest = system ("perl .\\$templateparsername --crosstest --noorphan $template_file $src_name");
     }
     if ($resulttest) { test_error ("Generation of sourcecode for the test failed."); }
     if ($resultctest){ test_error ("Generation of sourcecode for the crosstest failed."); }
@@ -362,6 +363,9 @@ sub write_result_file_head
     open (RESULTS, ">$opt_resultsfile") or error ("Could not open file '$opt_resultsfile' to write results.", 1);
     $resultline = sprintf "%-25s %-s\n", "#Tested Directive", "\tt\tct\tot\toct";
     print RESULTS $resultline;
+    open (RESULTSCSV, ">results.csv") or error ("Could not open file 'results.csv' to write results.", 1);
+    $resultline = "TestName,t,ct,ot,oct\n";
+    print RESULTSCSV $resultline;
 }
 
 # Function which adds a result to the list of results
@@ -373,10 +377,12 @@ sub add_result
     $num_constructs++;
 
     open (RESULTS, ">>$opt_resultsfile") or error ("Could not open file '$opt_resultsfile' to write results.", 1);
+    open (RESULTSCSV, ">>results.csv") or error ("Could not open file '$opt_resultsfile' to write results.", 1);
 
     if (${$result}[0][0]) {
 		$num_tests ++;}
 
+    # Result symbols for "normal" tests
 	if ($opt_compile and ${$result}[0][1] eq 0) {
 		${$result}[0][2]{test}      = 'ce';
 		${$result}[0][2]{crosstest} = '-';
@@ -397,6 +403,7 @@ sub add_result
 		}
     }
     $resultline = "${$result}[0][2]{test}\t${$result}[0][2]{crosstest}\t";
+    $resultcsvline = "${$result}[0][2]{test},${$result}[0][2]{crosstest},";
 
     if (${$result}[1][0]) {
 		$num_tests ++;}
@@ -422,6 +429,7 @@ sub add_result
 		}
     }
     $resultline .= "${$result}[1][2]{test}\t${$result}[1][2]{crosstest}\n";
+    $resultcsvline .= "${$result}[1][2]{test},${$result}[1][2]{crosstest}\n";
 
     $num_failed_tests = $num_normal_tests_failed + $num_orphaned_tests_failed;
 	$num_failed_compilation = $num_normal_tests_compile_error + $num_orphaned_tests_compile_error;
@@ -429,7 +437,9 @@ sub add_result
 	$num_verified_tests = $num_normal_tests_verified + $num_orphaned_tests_verified;
 
     $resultline2 = sprintf "%-25s %-s", "$testname", "\t$resultline";
+    $resultcsvline2 = "$testname,$resultcsvline";
     print RESULTS $resultline2;
+    print RESULTSCSV $resultcsvline2;
 }
 
 # Function which executes a single test
@@ -443,6 +453,8 @@ sub execute_single_test
 # tests in normal mode
     if ($opt_compile){ $result[0][0] = make_src ($opt_test, 0);
                        $result[0][1] = compile_src ($opt_test, 0);}
+    else             { $result[0][0] = 1;
+                       $result[0][1] = 1;}
     if ($opt_run && $result[0][1] == 1) {
                        $result[0][2] = {run_test ($opt_test, 0)};}
 # tests in orphaned mode
@@ -451,6 +463,8 @@ sub execute_single_test
         print "+ orphaned mode:\n";
         if ($opt_compile) { $result[1][0] = make_src ($opt_test, 1);
                             $result[1][1] = compile_src ($opt_test, 1);}
+        else              { $result[1][0] = 1;
+                            $result[1][1] = 1;}
         if ($opt_run && $result[1][1] == 1) {
                             $result[1][2] = {run_test ($opt_test, 1)};}
     }
