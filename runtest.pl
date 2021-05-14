@@ -253,7 +253,7 @@ sub run_test
 # Check if crosstest finished within max execution time
     if ($exit_status eq 'TO') {
         print "... not verified (timeout)\n";
-        return ('test' => $result, 'crosstest' => 'TO');
+        return ('test' => $resulttest, 'crosstest' => 'TO');
     }
 ############################################################
 # test if crosstests failed as expected
