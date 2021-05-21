@@ -407,7 +407,10 @@ sub add_result
 
     if (${$result}[1][0]) {
 		$num_tests ++;}
-    else { $resultline .= "-\t-\n"; }
+    else { 
+        $resultline .= "-\t-";
+        $resultcsvline .= "-,-";
+    }
 
     if ($opt_compile and ${$result}[1][1] eq 0) {
 		${$result}[1][2]{test}      = 'ce';
