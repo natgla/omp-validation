@@ -277,14 +277,18 @@ sub compile_src
 # Make orphaned tests
         $exec_name     = "bin/$opt_lang/orph_test_$testname";
         $crossexe_name = "bin/$opt_lang/orph_ctest_$testname";
-        $resulttest  = system ("$msvc_compile_command $exec_name.c > $exec_name\_compile.log");
-        $resultctest = system ("$msvc_compile_command $crossexe_name.c > $crossexe_name\_compile.log");
+        system("echo $msvc_compile_command $exec_name.c > $exec_name\_compile.log");
+        system("echo $msvc_compile_command $crossexe_name.c > $crossexe_name\_compile.log");
+        $resulttest  = system ("$msvc_compile_command $exec_name.c >> $exec_name\_compile.log");
+        $resultctest = system ("$msvc_compile_command $crossexe_name.c >> $crossexe_name\_compile.log");
     } else {
 # Make test
         $exec_name     = "bin/$opt_lang/test_$testname";
         $crossexe_name = "bin/$opt_lang/ctest_$testname";
-        $resulttest  = system ("$msvc_compile_command $exec_name.c > $exec_name\_compile.log" );
-        $resultctest = system ("$msvc_compile_command $crossexe_name.c > $crossexe_name\_compile.log" );
+        system("echo $msvc_compile_command $exec_name.c > $exec_name\_compile.log");
+        system("echo $msvc_compile_command $crossexe_name.c > $crossexe_name\_compile.log");
+        $resulttest  = system ("$msvc_compile_command $exec_name.c >> $exec_name\_compile.log" );
+        $resultctest = system ("$msvc_compile_command $crossexe_name.c >> $crossexe_name\_compile.log" );
     }
     if ($resulttest) { test_error ("Compilation of the test failed."); }
     if ($resultctest){ test_error ("Compilation of the crosstest failed."); }
