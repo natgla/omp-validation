@@ -34,17 +34,118 @@
 # 3. Compiler selection and Flags
 #########################################################
 
-# MSVC Compiler
-CC     = cl
-CFLAGS = -openmp:experimental -openmp:llvm -O2 -DWIN32 -D_WINDOWS -D_WIN32 -TP
+# GNU Compiler
+CC     = gcc
+CFLAGS = -fopenmp -lm -O3
+CFLAGS = -fopenmp -lm -O3
+FC     = gfortran
+FFLAGS = -fopenmp -lm
+FFLAGS = -fopenmp -lm -O3
 
-# MSVC Compiler, old switch
-#CC     = cl
-#CFLAGS =-openmp -O2 -DWIN32 -D_WINDOWS -D_WIN32
 
-# LLVM Compiler
-#CC     = clang
-#CFLAGS =-fopenmp -O3 -DWIN32 -D_WINDOWS -D_WIN32
+# Fujitsu Compilers:
+#CC = fcc
+#CFLAGS = -KOMP,fast_GP2=2
+#FC=frt
+#FFLAGS=-KOMP,fast_GP2=2 -w -Am -X9 -Fixed
+
+
+# PGI compilers
+#CC = pgcc
+#CFLAGS = -mp
+#CFLAGS = -mp -DVERBOSE
+#CFLAGS = -fast -mp
+
+#FC = pgf90
+#FFLAGS = -fast -mp
+#FFLAGS = -mp -g
+
+
+# Intel compilers:
+#CC = icc
+#CFLAGS = -O3 -ip -openmp
+#CFLAGS = -Wall -O0 -openmp
+#CFLAGS =  -openmp -lm
+#CFLAGS =  -openmp -lm -DVERBOSE
+
+#FC = ifort
+#FFLAGS = -openmp -lm -fpp
+
+# Omni compilers:
+#CC = ompcc
+#CFLAGS = -O3 -lm
+
+
+# Assure compilers:
+#CC = assurec
+#CFLAGS = -O3 -WApname=project -DUSE_ASSURE=1
+#FC =
+#FFLAGS =
+
+# NEC:
+#CC = c++
+#CC = sxc++
+#CFLAGS = -Popenmp
+
+#FC=sxf90
+#FFLAGS= -Popenmp
+
+
+# Hitachi:
+#CC = xcc
+#CFLAGS = -O4 -pvec +Op -parallel -omp
+#FC =
+#FFLAGS =
+
+
+# SGI:
+#CC = cc
+#CFLAGS = -mp -lm
+#FC =
+#FFLAGS =
+
+
+# IBM compilers:
+#CC = xlc_r
+#CFLAGS = -qsmp=omp -lm
+
+
+#FC=xlf90_r
+#FFLAGS=-qsmp=omp -qfixed=132 -qlanglvl=extended
+
+
+# SUN compilers
+#CC = cc
+#CFLAGS = -fast -xopenmp -lm
+
+#FC =f90
+#FFLAGS = -xopenmp -fast -lm
+
+
+# open64 compilers
+# remark: -I. was a workaround because the installation came without omp.h file
+#CC = opencc
+#CFLAGS = -O0 -openmp -lm -I. -lomp -lpthread
+#CFLAGS = -O0 -openmp -lm -I /home/matthew/opt/usr/include -lpthread
+#CFLAGS = -openmp -lm
+
+#FC = openf90
+#FFLAGS = -O0 -openmp -lm  -lomp -lpthread
+
+
+#Pathscale Compiler
+#CC = pathcc
+#CFLAGS = -mp -Ofast -lm
+
+#FC=pathf90
+#FFLAGS= -mp -Ofast -lm
+
+
+#OpenUH Compiler
+#CC = uhcc
+#CFLAGS = -mp -lm
+#FC = uhf90
+#FFLAGS = -mp -lm
 
 #########################################################################
 
@@ -72,11 +173,19 @@ help:
 	@echo "  cleanall"
 	@echo "    Remove the entire bin/ directory"
 
-{bin\c\}.c{bin\c\}.exe:
-	$(CC) $(CFLAGS) $< /Fobin\c\ /Febin\c\ 
+omp_my_sleep:
+	mkdir -p bin/c
+	cp omp_my_sleep.h bin/c/
+omp_testsuite: omp_testsuite.h
+	mkdir -p bin/c
+	cp omp_testsuite.h bin/c/
+omp_testsuite.h: ompts-c.conf c/*
+	./ompts_makeHeader.pl -f=ompts-c.conf -t=c
+.c.o: omp_testsuite omp_my_sleep
+	$(CC) $(CFLAGS) -c $<
 
-ctest: omp_my_sleep omp_testsuite omp_testsuite.h
-	perl runtest.pl --lang=c testlist-c.txt
+ctest: omp_my_sleep omp_testsuite
+	./runtest.pl --lang=c testlist-c.txt
 
 ftest:
 	mkdir -p bin/fortran
@@ -96,17 +205,17 @@ print_compile_options:
 	@echo "compilation: $(FC) $(FFLAGS)"
 	@$(FC) --version
 
-clean:
-	del /s /q bin
+cleansrcs:
+	find bin/ -iname "*.[cf]" -exec rm {} \;
+cleanbins:
+	find bin/ -perm /a+x -type f -exec rm {} \;
+cleanouts:
+	find bin/ -iname "*.out" -exec rm {} \;
+cleanlogs:
+	find bin/ -iname "*.log" -exec rm {} \;
 
-.IGNORE:
+clean: cleansrcs cleanbins
 
-omp_my_sleep:
-	mkdir -p bin\c
-	copy omp_my_sleep.h bin\c\ 
-omp_testsuite: omp_testsuite.h
-	mkdir -p bin\c
-	copy omp_testsuite.h bin\c\ 
-omp_testsuite.h: ompts-c.conf c\*
-	perl ompts_makeHeader.pl -f=ompts-c.conf -t=c
+cleanall:
+	rm -rf bin/
 

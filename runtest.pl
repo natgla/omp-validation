@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+use lib '.';
+
 # runtest [options] FILENAME
 #
 # Read the file FILENAME. Each line contains a test.
@@ -216,7 +218,6 @@ sub run_test
         $bin_name  = catfile("bin", $opt_lang, "test_$testname");
         $cbin_name = catfile("bin", $opt_lang, "ctest_$testname");
     }
-    # TODO: Windows only.
     if ($^O eq "MSWin32") {
         $bin_name = "$bin_name.exe";
         $cbin_name = "$cbin_name.exe";
@@ -285,39 +286,26 @@ sub compile_src
 {
     my ($testname, $orphan) = @_;
     print "Compiling soures ............";
-    if ($^O eq "MSWin32") {
-        # TODO: nmake?
-        $msvc_compile_command = "cl.exe -openmp:experimental -openmp:llvm -O2 -DWIN32 -D_WINDOWS -D_WIN32 -TP -Fobin\\$opt_lang\\ -Febin\\$opt_lang\\";
-    }
     if ($orphan) {
 # Make orphaned tests
-        $exec_name     = "bin/$opt_lang/orph_test_$testname";
-        $crossexe_name = "bin/$opt_lang/orph_ctest_$testname";
-        if ($^O eq "MSWin32") {
-            system("echo $msvc_compile_command $exec_name.c > $exec_name\_compile.log");
-            system("echo $msvc_compile_command $crossexe_name.c > $crossexe_name\_compile.log");
-            $resulttest  = system ("$msvc_compile_command $exec_name.c >> $exec_name\_compile.log");
-            $resultctest = system ("$msvc_compile_command $crossexe_name.c >> $crossexe_name\_compile.log");
-        }
-        else {
-            $resulttest  = system ("make $exec_name > $exec_name\_compile.log" );
-            $resultctest = system ("make $crossexe_name > $crossexe_name\_compile.log" );
-        }
+        $exec_name     = catfile("bin", $opt_lang, "orph_test_$testname");
+        $crossexe_name = catfile("bin", $opt_lang, "orph_ctest_$testname");
     } else {
 # Make test
-        $exec_name     = "bin/$opt_lang/test_$testname";
-        $crossexe_name = "bin/$opt_lang/ctest_$testname";
-        if ($^O eq "MSWin32") {
-            system("echo $msvc_compile_command $exec_name.c > $exec_name\_compile.log");
-            system("echo $msvc_compile_command $crossexe_name.c > $crossexe_name\_compile.log");
-            $resulttest  = system ("$msvc_compile_command $exec_name.c >> $exec_name\_compile.log" );
-            $resultctest = system ("$msvc_compile_command $crossexe_name.c >> $crossexe_name\_compile.log" );
-        }
-        else {
-            $resulttest  = system ("make $exec_name > $exec_name\_compile.log" );
-            $resultctest = system ("make $crossexe_name > $crossexe_name\_compile.log" );
-        }
+        $exec_name     = catfile("bin", $opt_lang, "test_$testname");
+        $crossexe_name = catfile("bin", $opt_lang, "ctest_$testname");
     }
+
+    $make_program = "make";
+    if ($^O eq "MSWin32") {
+        $make_program = "nmake";
+        $exec_name = "$exec_name.exe";
+        $crossexe_name = "$crossexe_name.exe";
+    }
+
+    $resulttest  = system ("$make_program $exec_name > $exec_name\_compile.log" );
+    $resultctest = system ("$make_program $crossexe_name > $crossexe_name\_compile.log" );
+
     if ($resulttest) { test_error ("Compilation of the test failed."); }
     if ($resultctest){ test_error ("Compilation of the crosstest failed."); }
 
@@ -417,7 +405,6 @@ sub add_result
     if (${$result}[0][0]) {
 		$num_tests ++;}
 
-    # Result symbols for "normal" tests
 	if ($opt_compile and ${$result}[0][1] eq 0) {
 		${$result}[0][2]{test}      = 'ce';
 		${$result}[0][2]{crosstest} = '-';
