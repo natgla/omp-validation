@@ -98,6 +98,7 @@ print_compile_options:
 
 clean:
 	del /s /q bin
+	del omp_testsuite.h
 
 .IGNORE:
 

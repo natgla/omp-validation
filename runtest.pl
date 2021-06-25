@@ -16,7 +16,12 @@ use lib '.';
 # name of the global configuration file for the testsuite:
 $config_file    = "ompts.conf";
 $logfile        = "ompts.log"; # overwriteable by value in config file
-$env_set_threads_command = 'OMP_NUM_THREADS=%n; export OMP_NUM_THREADS;';
+if ($^O eq "MSWin32") {
+    $env_set_threads_command = 'set OMP_NUM_THREADS=%n &';
+}
+else {
+    $env_set_threads_command = 'OMP_NUM_THREADS=%n; export OMP_NUM_THREADS;';
+}
 $debug_mode     = 0;
 ################################################################################
 # After this line the script part begins! Do not edit anithing below
@@ -55,7 +60,6 @@ close (CONFIG);
 ($display_errors) = get_tag_values("displayerrors", $config);
 ($display_warnings) = get_tag_values ("displaywarnings", $config);
 ($numthreads) = get_tag_values ("numthreads", $config);
-($env_set_threads_command) = get_tag_values("envsetthreadscommand",$config);
 $env_set_threads_command =~ s/\%n/$numthreads/g;
 @languages = get_tag_values ("language", $config);
 
