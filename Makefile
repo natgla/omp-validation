@@ -73,28 +73,18 @@ help:
 	@echo "    Remove the entire bin/ directory"
 
 {bin\c\}.c{bin\c\}.exe:
+# Space at the end of this command is intentional
 	$(CC) $(CFLAGS) $< /Fobin\c\ /Febin\c\ 
 
 ctest: omp_my_sleep omp_testsuite omp_testsuite.h
 	perl runtest.pl --lang=c testlist-c.txt
-
-ftest:
-	mkdir -p bin/fortran
-	cp omp_testsuite.f bin/fortran
-	cp omp_my_sleep.f bin/fortran
-	./runtest.pl --lang=fortran testlist-f.txt
 
 print_compile_options:
 	@echo "-------------------"
 	@echo "C compiler"
 	@echo "-------------------"
 	@echo "compilation: $(CC) $(CFLAGS)"
-	@$(CC) --version
-	@echo "-------------------"
-	@echo "Fortran compiler"
-	@echo "-------------------"
-	@echo "compilation: $(FC) $(FFLAGS)"
-	@$(FC) --version
+	@$(CC)
 
 clean:
 	rd /s /q bin
@@ -103,10 +93,10 @@ clean:
 .IGNORE:
 
 omp_my_sleep:
-	mkdir -p bin\c
+	mkdir bin\c
 	copy omp_my_sleep.h bin\c\ 
 omp_testsuite: omp_testsuite.h
-	mkdir -p bin\c
+	mkdir bin\c
 	copy omp_testsuite.h bin\c\ 
 omp_testsuite.h: ompts-c.conf c\*
 	perl ompts_makeHeader.pl -f=ompts-c.conf -t=c
