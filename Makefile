@@ -97,7 +97,7 @@ print_compile_options:
 	@$(FC) --version
 
 clean:
-	del /s /q bin
+	rd /s /q bin
 	del omp_testsuite.h
 
 .IGNORE:
