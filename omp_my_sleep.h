@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include<stdlib.h>
 
+#ifdef _MSC_VER
 #include "unistd.h"
 
 #include <sys/timeb.h>
@@ -56,6 +57,12 @@ inline clock_t times (struct tms *__buffer) {
 	__buffer->tms_cutime = 0;
 	return __buffer->tms_utime;
 }
+#else
+#include<unistd.h>
+
+#include <sys/times.h> 
+#include <sys/time.h>
+#endif
 
 #include <time.h>
 #include <errno.h>
