@@ -74,9 +74,9 @@ help:
 
 {bin\c\}.c{bin\c\}.exe:
 # Space at the end of this command is intentional
-	$(CC) $(CFLAGS) $< /Fobin\c\ /Febin\c\ 
+	$(CC) $(CFLAGS) $< /I. /Fobin\c\ /Febin\c\ 
 
-ctest: omp_my_sleep omp_testsuite omp_testsuite.h
+ctest: omp_my_sleep omp_testsuite omp_testsuite.h unistd
 	perl runtest.pl --lang=c testlist-c.txt
 
 print_compile_options:
@@ -92,11 +92,14 @@ clean:
 
 .IGNORE:
 
+unistd:
+	if not exist "bin\c" mkdir bin\c
+	copy unistd.h bin\c\ 
 omp_my_sleep:
-	mkdir bin\c
+	if not exist "bin\c" mkdir bin\c
 	copy omp_my_sleep.h bin\c\ 
 omp_testsuite: omp_testsuite.h
-	mkdir bin\c
+	if not exist "bin\c" mkdir bin\c
 	copy omp_testsuite.h bin\c\ 
 omp_testsuite.h: ompts-c.conf c\*
 	perl ompts_makeHeader.pl -f=ompts-c.conf -t=c
