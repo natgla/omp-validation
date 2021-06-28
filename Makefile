@@ -90,8 +90,6 @@ clean:
 	rd /s /q bin
 	del omp_testsuite.h
 
-.IGNORE:
-
 unistd:
 	if not exist "bin\c" mkdir bin\c
 	copy unistd.h bin\c\ 
