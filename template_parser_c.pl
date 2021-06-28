@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+use lib '.';
+
 # ompts_parser [option] INFILE OUTFILE
 # 
 # Creats the tests and the crosstests for the OpenMP-Testsuite out of an templatefiles which are given to the programm.
