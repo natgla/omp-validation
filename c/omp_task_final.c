@@ -16,7 +16,7 @@ int <ompts:testcode:functionname>omp_task_final</ompts:testcode:functionname>(FI
     int includedtids[NUM_TASKS];
     int i;
     </ompts:orphan:vars>
-    int error;
+    int error = 0;
 #pragma omp parallel 
 {
 #pragma omp single
